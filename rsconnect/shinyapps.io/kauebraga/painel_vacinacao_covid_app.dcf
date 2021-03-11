@@ -1,0 +1,12 @@
+name: painel_vacinacao_covid_app
+title: painel_vacinacao_covid_app
+username:
+account: kauebraga
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3680731
+bundleId: 4258511
+url: https://kauebraga.shinyapps.io/painel_vacinacao_covid_app/
+when: 1614030958.63016
+asMultiple: FALSE
+asStatic: FALSE
