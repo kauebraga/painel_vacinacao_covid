@@ -156,6 +156,9 @@ estabs_problema_geocoded_dt <- arrange(estabs_problema_geocoded_dt, estabelecime
 # identificar endereco procurado
 estabs_problema_geocoded_dt[, SearchedAddress := data_vacinacao_log$endereco]
 
+# save
+readr::write_rds(estabs_problema_geocoded_dt, "../data/painel_vacinacao_covid/geocode/geocode_vacinacao_google1.rds")
+
 table(estabs_problema_geocoded_dt$PrecisionDepth, useNA = 'always')
 
 
@@ -173,12 +176,29 @@ estabs_baixa_precisao <- estabs_problema_geocoded_dt[PrecisionDepth %nin% c("str
                                                                             "town_square") | is.na(PrecisionDepth)]
 
 # selecionar colunas
-data_vacinacao_prob <- data_vacinacao %>% 
+data_vacinacao_log_prob <- data_vacinacao_log %>% 
   filter(estabelecimento_codigo_cnes %in% estabs_baixa_precisao$estabelecimento_codigo_cnes) %>%
-  select(estabelecimento_codigo_cnes, estabelecimento, estabelecimento_razao_social,
-         estabelecimento_municipio, estabelecimento_unidade_federativa) %>%
-  distinct(estabelecimento_codigo_cnes, .keep_all = TRUE)
+  mutate(endereco = paste0("CEP ", CO_CEP, " - ", estabelecimento_municipio, ", ", estabelecimento_unidade_federativa))
 
-# criar enderecos
-data_vacinacao_prob <- data_vacinacao_prob %>%
-  mutate(endereco = paste0(estabelecimento, " - ", estabelecimento_municipio, ", ", estabelecimento_unidade_federativa))
+# apply gmaps
+coordenadas_google_prob <- lapply(X=data_vacinacao_log_prob$endereco, ggmap::geocode, output = "all")
+
+# identify list names as id_estab
+names(coordenadas_google_prob) <- data_vacinacao_log_prob$estabelecimento_codigo_cnes
+
+# save
+readr::write_rds(coordenadas_google_prob, "../data/painel_vacinacao_covid/locais_vacinacao_geocode_output_prob_google.rds")
+
+
+# 3.5) Rodar funcao que transforma todos os estabs georef em data.table
+estabs_problema2_geocoded <- lapply(coordenadas_google_prob, create_dt)
+
+# 3.6) Rbind as data.table
+estabs_problema2_geocoded_dt <- rbindlist(estabs_problema2_geocoded, idcol = "estabelecimento_codigo_cnes",
+                                         use.names = TRUE)
+
+# arrange
+estabs_problema2_geocoded_dt <- arrange(estabs_problema2_geocoded_dt, estabelecimento_codigo_cnes)
+
+# identificar endereco procurado
+estabs_problema2_geocoded_dt[, SearchedAddress := data_vacinacao_log_prob$endereco]
