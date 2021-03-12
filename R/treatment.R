@@ -13,15 +13,23 @@ sfc_as_cols <- function(x, names = c("lon","lat")) {
   st_set_geometry(ui, NULL)
 }
 
-# baixar dados
+# 0) baixar dados ------------------------------
+curl::curl_download("https://data.brasil.io/dataset/covid19/microdados_vacinacao.csv.gz",
+                    destfile = "../data-raw/painel_vacinacao_covid/microdados_vacinacao.csv.gz",
+                    quiet = FALSE)
 # system("cd data-raw && wget https://data.brasil.io/dataset/covid19/microdados_vacinacao.csv.gz")
 # "https://s3-sa-east-1.amazonaws.com/ckan.saude.gov.br/PNI/vacina/2021/part-00000-e00e85d2-6871-4170-a5d7-74e1d84cfada-c000.csv"
 
 
-dados <- fread("../data-raw/microdados_vacinacao.csv.gz")
+# 1) abrir dados e salvar como data.table descompacatado --------------------------------------------------
+
+dados <- fread("../data-raw/painel_vacinacao_covid/microdados_vacinacao.csv.gz")
+fwrite(dados, "../data/painel_vacinacao_covid/microdados_vacinacao.csv")
 # colnames(dados)
 
-# download munis ------------
+dados <- fread("../data/painel_vacinacao_covid/microdados_vacinacao.csv")
+
+# 2) download shapes ------------
 
 pais_sf <- geobr::read_country() %>% st_transform(4326)
 munis_sf <- geobr::read_municipality() %>% st_transform(4326)
@@ -33,7 +41,7 @@ readr::write_rds(munis_sf, "data/munis_sf.rds")
 readr::write_rds(estados_sf, "data/estados_sf.rds")
 
 
-# calcular o total de pessoas que ja receberam vacina --------------------------
+# 3) calcular o total de pessoas que ja receberam vacina --------------------------
 
 totais_pais <- dados %>%
   filter(numero_dose == 1) %>%
@@ -60,7 +68,7 @@ readr::write_rds(totais_pais, "data/totais_pais.rds")
 readr::write_rds(totais_estados, "data/totais_estados.rds")
 readr::write_rds(totais_munis, "data/totais_munis.rds")
 
-# by age group ---------------------------
+# 4) totais by age group ---------------------------
 vacina_idade <- dados %>%
   count(estabelecimento_municipio_codigo, paciente_idade)
 
@@ -90,7 +98,7 @@ readr::write_rds(vacina_grupo_estados, "data/vacina_por_grupo_estados.rds")
 readr::write_rds(vacina_grupo_munis, "data/vacina_por_grupo_munis.rds")
 
 
-# by data ---------------------------------
+# 5) totais por dia ---------------------------------
 vacina_dia_pais <- dados %>%
   mutate(data_aplicacao = as.Date(data_aplicacao)) %>%
   # tirar tudo antes do dia 1701 (primeiro dia de fato)
@@ -140,9 +148,3 @@ readr::write_rds(vacina_dia_pais, "data/vacina_dia_pais.rds")
 readr::write_rds(vacina_dia_estados, "data/vacina_dia_estados.rds")
 readr::write_rds(vacina_dia_munis, "data/vacina_dia_munis.rds")
 
-# table(dados$paciente_grupo)  
-# table(dados$paciente_subgrupo)  
-
-# count(dados, estabelecimento_codigo_cnes, sort = TRUE)
-
-fread("data-raw/part-00000-e00e85d2-6871-4170-a5d7-74e1d84cfada-c000.csv") %>% nrow()

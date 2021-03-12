@@ -4,7 +4,7 @@ library(ggmap)
 library(Hmisc)
 
 # openvacinacao
-data_vacinacao <- fread("../data-raw/microdados_vacinacao.csv.gz",
+data_vacinacao <- fread("../data/painel_vacinacao_covid/microdados_vacinacao.csv",
                         select = c("estabelecimento_codigo_cnes", "estabelecimento_municipio",
                                    "estabelecimento_unidade_federativa", 
                                    "estabelecimento_razao_social",
@@ -12,24 +12,33 @@ data_vacinacao <- fread("../data-raw/microdados_vacinacao.csv.gz",
 
 # abrir dados do cnes com o endereco dos locais
 # baixar daqui: http://cnes.datasus.gov.br/pages/downloads/arquivosBaseDados.jsp
-data_cnes <- fread("../data-raw/tbEstabelecimento202101.csv", colClasses = 'character',
+data_cnes <- fread("../data-raw/painel_vacinacao_covid/tbEstabelecimento202101.csv", colClasses = 'character',
                    select = c("CO_CNES", "NO_LOGRADOURO", "NU_ENDERECO", "NO_BAIRRO",  "CO_CEP"))
+
+
+# testes
+# fortaleza
+a <- data_vacinacao %>% filter(estabelecimento_municipio == "Fortaleza") %>% distinct(estabelecimento_codigo_cnes, .keep_all = TRUE)
+b <- data_cnes[CO_CNES == "9094857"]
+# poucos digitos
+a <- data_vacinacao[, nchar_cnes := nchar(estabelecimento_codigo_cnes)]
+a1 <- a[nchar_cnes < 7]
+a1 <- distinct(a1, estabelecimento_codigo_cnes, .keep_all = TRUE)
 
 # verificar numero de chars no cnes
 # table(nchar(data_vacinacao$estabelecimento_codigo_cnes))
 # data_vacinacao %>% mutate(a = nchar(estabelecimento_codigo_cnes)) %>% filter(a != 7) %>% 
-  # distinct(estabelecimento_codigo_cnes, estabelecimento_razao_social) %>% View()
+# distinct(estabelecimento_codigo_cnes, estabelecimento_razao_social) %>% View()
 
 # table(nchar(data_cnes$CO_CNES))
 data_vacinacao[, estabelecimento_codigo_cnes := stringr::str_pad(estabelecimento_codigo_cnes, width = 7, pad = 0)]
 
-# pegar somente os que tem 7 chars (que estao no cnes)
+# identificar n characters
 data_vacinacao[, cnes_nchar := nchar(estabelecimento_codigo_cnes)]
-data_vacinacao_filter <- data_vacinacao[cnes_nchar == 7]
-data_vacinacao_filter[, estabelecimento_codigo_cnes := as.character(estabelecimento_codigo_cnes)]
+data_vacinacao[, estabelecimento_codigo_cnes := as.character(estabelecimento_codigo_cnes)]
 
 # join
-data_vacinacao_log <- left_join(data_vacinacao_filter,
+data_vacinacao_log <- left_join(data_vacinacao,
                                 data_cnes,
                                 by = c("estabelecimento_codigo_cnes" = "CO_CNES")
 )
@@ -49,8 +58,11 @@ data_vacinacao_log <- data_vacinacao_log %>%
   mutate(endereco = paste0(NO_LOGRADOURO, ", ", NU_ENDERECO, ", ", NO_BAIRRO,
                            " - CEP ", CO_CEP, " - ", estabelecimento_municipio, ", ", estabelecimento_unidade_federativa))
 
+data_vacinacao_log <- arrange(data_vacinacao_log, estabelecimento_codigo_cnes)
 
-ggmap::register_google("AIzaSyDd0F3ThYHXux3iJPKxxvjS0GhzbprO9MM")
+
+ggmap::register_google(fread("../data-raw/painel_vacinacao_covid/google_key.txt")$V1)
+
 
 
 coordenadas_google_1_1 <- lapply(X=data_vacinacao_log$endereco[1:2500], ggmap::geocode, output = "all")
@@ -74,15 +86,41 @@ coordenadas_google <- c(coordenadas_google_1_1, coordenadas_google_1_2,
                         coordenadas_google_5,coordenadas_google_6,coordenadas_google_7,coordenadas_google_8,
                         coordenadas_google_9,coordenadas_google_10,coordenadas_google_11,coordenadas_google_12,
                         coordenadas_google_13)
-                        
-                        
-                        
+
+
+
 # identify list names as id_estab
 names(coordenadas_google) <- data_vacinacao_log$estabelecimento_codigo_cnes
 
 # save
-readr::write_rds(coordenadas_google, "data/locais_vacinacao_geocode_output_google.rds")
-coordenadas_google <- readr::read_rds("data/locais_vacinacao_geocode_output_google.rds")
+readr::write_rds(coordenadas_google, "../data/painel_vacinacao_covid/locais_vacinacao_geocode_output_google.rds")
+
+
+# check if there any difference between the estabs that were saved and the estabs that were
+# supposed to be geocoded
+coordenadas_google <- readr::read_rds("../data/painel_vacinacao_covid/locais_vacinacao_geocode_output_google.rds")
+
+if (length(setdiff(data_vacinacao_log$estabelecimento_codigo_cnes, names(coordenadas_google))) > 0) {
+  
+  message(sprintf("\nThere are %i new estabs to geocode in gmaps",  
+                  length(setdiff(data_vacinacao_log$estabelecimento_codigo_cnes, names(coordenadas_google)))))
+  
+  # new estab to geocode in gmaps
+  estabs_problema_new <- data_vacinacao_log[estabelecimento_codigo_cnes %nin% names(coordenadas_google)]
+  
+  # send to gmaps
+  coordenadas_google1_new <- lapply(X=estabs_problema_new$endereco, ggmap::geocode, output = "all")
+  
+  # identify list names as id_estab
+  names(coordenadas_google1_new) <- estabs_problema_new$estabelecimento_codigo_cnes
+  
+  # bind to the old geocoded estabs by gmaps1
+  coordenadas_google <- c(coordenadas_google, coordenadas_google1_new)
+  
+  # save it
+  readr::write_rds(coordenadas_google, "../data/painel_vacinacao_covid/locais_vacinacao_geocode_output_google.rds")
+
+}
 
 # function to create data.frame from gmaps output
 create_dt <- function(x) {
@@ -110,13 +148,18 @@ create_dt <- function(x) {
 estabs_problema_geocoded <- lapply(coordenadas_google, create_dt)
 
 # 3.6) Rbind as data.table
-estabs_problema_geocoded_dt <- rbindlist(estabs_problema_geocoded, idcol = "id_estab",
+estabs_problema_geocoded_dt <- rbindlist(estabs_problema_geocoded, idcol = "estabelecimento_codigo_cnes",
                                          use.names = TRUE)
+# arrange
+estabs_problema_geocoded_dt <- arrange(estabs_problema_geocoded_dt, estabelecimento_codigo_cnes)
 
 # identificar endereco procurado
 estabs_problema_geocoded_dt[, SearchedAddress := data_vacinacao_log$endereco]
 
-# segunda rodad: estabs com baixa precisao e que nao tem cnes com 7 digitos
+table(estabs_problema_geocoded_dt$PrecisionDepth, useNA = 'always')
+
+
+# segunda rodad: estabs com baixa precisao e que deram NA -----------------------------------------
 # esses vao ter ser geocoded com sua razao social
 estabs_baixa_precisao <- estabs_problema_geocoded_dt[PrecisionDepth %nin% c("street_number", "route", "airport", 
                                                                             "amusement_park","bus_station","establishment",
@@ -126,22 +169,16 @@ estabs_baixa_precisao <- estabs_problema_geocoded_dt[PrecisionDepth %nin% c("str
                                                                             "post_box",
                                                                             "premise",
                                                                             "subpremise",
-                                                                            "town_square"
-)]
-
-estabs_n7digs <- data_vacinacao %>% distinct(estabelecimento_codigo_cnes, cnes_nchar) %>% filter(cnes_nchar != 7)
-
-# filtrar esses problematicos
-data_vacinacao_new <- data_vacinacao[estabelecimento_codigo_cnes %in% c(estabs_baixa_precisao$id_estab,
-                                                                        estabs_n7digs$estabelecimento_codigo_cnes)]
-data_vacinacao_new[, estabelecimento_codigo_cnes := as.character(estabelecimento_codigo_cnes)]
+                                                                            "postal_code",
+                                                                            "town_square") | is.na(PrecisionDepth)]
 
 # selecionar colunas
-data_vacinacao_new_log <- data_vacinacao_new %>% 
+data_vacinacao_prob <- data_vacinacao %>% 
+  filter(estabelecimento_codigo_cnes %in% estabs_baixa_precisao$estabelecimento_codigo_cnes) %>%
   select(estabelecimento_codigo_cnes, estabelecimento, estabelecimento_razao_social,
          estabelecimento_municipio, estabelecimento_unidade_federativa) %>%
   distinct(estabelecimento_codigo_cnes, .keep_all = TRUE)
 
 # criar enderecos
-data_vacinacao_new_log <- data_vacinacao_new_log %>%
+data_vacinacao_prob <- data_vacinacao_prob %>%
   mutate(endereco = paste0(estabelecimento, " - ", estabelecimento_municipio, ", ", estabelecimento_unidade_federativa))
