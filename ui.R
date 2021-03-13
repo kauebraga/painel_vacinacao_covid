@@ -1,7 +1,6 @@
 library(dplyr)
 library(data.table)
 library(shinyWidgets)
-library(mapdeck)
 library(shinyBS)
 library(ggplot2)
 library(highcharter)
@@ -19,10 +18,11 @@ header <- dashboardHeader(
   titleWidth = 400,
   disable = FALSE,
   # tags$li(class="dropdown", uiOutput("dica")),
-  tags$li(class="dropdown", tags$a(href="https://opendatasus.saude.gov.br/dataset/covid-19-vacinacao", "Última atualização: 21/02/2021", target="_blank")),
+  tags$li(class="dropdown", tags$a(href="https://data.brasil.io/dataset/covid19/microdados_vacinacao.csv.gz", "Última atualização: 12/03/2021", target="_blank")),
+  # tags$li(class="dropdown", tags$a(href="https://opendatasus.saude.gov.br/dataset/covid-19-vacinacao", "Última atualização: 12/03/2021", target="_blank")),
   tags$li(class="dropdown", tags$a(href="https://kauebraga.dev/", "Contato", target="_blank")),
   # tags$li(class="dropdown",tags$a(href="https://www.linkedin.com/in/abhinav-agrawal-pmp%C2%AE-itil%C2%AE-5720309/" ,icon("linkedin"), "My Profile", target="_blank")),
-  tags$li(class="dropdown",tags$a(href="https://github.com/kauebraga/app_anac", icon("github"), "Código", target="_blank"))
+  tags$li(class="dropdown",tags$a(href="https://github.com/kauebraga/painel_vacinacao_covid", icon("github"), "Código", target="_blank"))
 )
 
 body <- dashboardBody(

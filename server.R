@@ -11,6 +11,16 @@ library(leaflet)
 library(scales)
 library(shiny)
 library(shinydashboard)
+library(htmltools)
+
+# set highchart options for portuguese
+lang <- getOption("highcharter.lang")
+lang$decimalPoint <- ","
+lang$months <- c('Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro')
+lang$shortMonths <- c('Jan', 'Fev', 'Mar', 'Abr', 'Maio', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez')
+lang$weekdays <- c('Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado')
+# lang$numericSymbols <- highcharter::JS("null") # optional: remove the SI prefixes
+options(highcharter.lang = lang)
 
 # geo data
 
@@ -33,7 +43,7 @@ totais_pais <- read_rds("data/totais_pais.rds")
 totais_estados <- read_rds("data/totais_estados.rds")
 totais_munis <- read_rds("data/totais_munis.rds")
 
-
+postos_n_coords <- read_rds("data/postos_n_coords.rds")
 
 
 
@@ -56,6 +66,8 @@ server <- function(input, output, session) {
       data$dia <- vacina_dia_pais
       data$totais <- totais_pais
       data$mapa <- pais
+      data$postos <- postos_n_coords %>% filter(estabelecimento_codigo_ibge_municipio == '5300108') %>%
+        slice(1)
       
     }
     
@@ -69,6 +81,7 @@ server <- function(input, output, session) {
       data$dia <- vacina_dia_estados[estabelecimento_unidade_federativa == input$estado]
       data$totais <- totais_estados[estabelecimento_unidade_federativa == input$estado]
       data$mapa <- estados %>% filter(abbrev_state == input$estado)
+      data$postos <- postos_n_coords %>% filter(estabelecimento_unidade_federativa == input$estado)
       
       
       
@@ -89,10 +102,13 @@ server <- function(input, output, session) {
       data$dia <- vacina_dia_munis[uf == input$estado & estabelecimento_codigo_ibge_municipio == input$cidade]
       data$totais <- totais_munis[uf == input$estado & estabelecimento_codigo_ibge_municipio == input$cidade]
       data$mapa <- munis %>% filter(abbrev_state == input$estado & code_muni == input$cidade)
+      data$postos <- postos_n_coords %>% filter(estabelecimento_codigo_ibge_municipio == input$cidade)
       
       # print(v_estado$estado)
       
       # print(input$cidade)
+      
+      # print(head(data$postos))
       
     }
     
@@ -140,15 +156,23 @@ server <- function(input, output, session) {
       hc_plotOptions(column = list(borderRadius = 1,
                                    borderColor = "#000000",
                                    color = "#F4F4F4",
+                                   tooltip = list(
+                                     xDateFormat = "%d-%m-%Y",
+                                     pointFormat = sprintf("%s: {point.y}", "Total do dia"),
+                                     valueDecimals = 0),
                                    # tooltip = list(
                                    # pointFormat = sprintf("%s: {point.y}", "Passageiros"),
                                    # valueDecimals = 0),
                                    # stacking = FALSE,
                                    # events = list(click = ClickFunction),
-                                   allowPointSelect = TRUE
-                                   
-                                   
-      ))
+                                   allowPointSelect = TRUE),
+                     line = list(color = "#000000",
+                                 tooltip = list(
+                                   xDateFormat = "%d-%m-%Y",
+                                   pointFormat = sprintf("%s: {point.y}", "Média móvel"),
+                                   valueDecimals = 0)
+                     )
+      )
     
     
   })
@@ -160,10 +184,26 @@ server <- function(input, output, session) {
     
     hchart(data$grupo, "bar", hcaes(y = n, x = paciente_grupo),
            name = "Frequência") %>%
-      hc_yAxis(labels = list(enabled = FALSE),
+      hc_xAxis(
+        title = list(text = "")
+      #   labels = list(useHTML = TRUE,
+      #                 style = list(width = '100px')))%>%
+      ) %>%
+      hc_yAxis(labels = list(enabled = TRUE),
                title = list(text = ""),
                tickLength = 0,
-               gridLineWidth = 0)
+               gridLineWidth = 0) %>%
+      hc_plotOptions(bar = list(borderRadius = 1,
+                                borderColor = "#000000",
+                                color = "#F4F4F4",
+                                tooltip = list(
+                                  pointFormat = sprintf("%s: {point.y}", "Total"),
+                                  valueDecimals = 0),
+                                # stacking = FALSE,
+                                allowPointSelect = TRUE
+                                
+                                
+      ))
     
     
   })
@@ -229,20 +269,61 @@ server <- function(input, output, session) {
     # print(centroid_go()$lon)
     # print(centroid_go()$lat)
     
+    # print(input$cidade)
+    print(input$estado)
+    
     # if(input$estado != "") {
     
     bounds_map <- st_bbox(data$mapa) 
     names(bounds_map) <- NULL
     
-    leafletProxy(mapId = "map", data = data$mapa) %>%
+    # color pallete for markers
+    pal <- colorNumeric(
+      palette = "YlGnBu",
+      domain = data$postos$doses_n
+    )
+    
+    # radius
+    radius_size <- rescale(data$postos$doses_n)
+    
+    leaflet_base <- leafletProxy(mapId = "map", data = data$mapa) %>%
       # leaflet::clearBounds() %>%
-      # leaflet::clearControls() %>%
+      leaflet::clearMarkers() %>%
+      leaflet::clearControls() %>%
       leaflet::clearShapes() %>%
-      addPolygons(stroke = TRUE, fillOpacity = 0) %>%
+      addPolygons(stroke = TRUE, fillOpacity = 0, color = 'black', opacity = 1,
+                  weight = 1) %>%
       flyToBounds(lng1 = bounds_map[1], lat1 = bounds_map[2],
                   lng2 = bounds_map[3], lat2 = bounds_map[4],
-                  options = list(animate = TRUE)) 
-    # }
+                  options = list(animate = FALSE,
+                                 duration = 0.8,
+                                 easeLinearity = 0.1,
+                                 noMoveStart = FALSE))
+    
+    
+    if(input$estado != "") {
+      
+      # labels for the circles
+      data$postos <- data$postos %>%
+        mutate(label1 = sprintf('%s<br/><strong>Total de doses:</strong> %s', 
+                                estabelecimento, 
+                                doses_n))
+      
+      # make them HTML like
+      labels_html <- lapply(data$postos$label1, HTML)
+      
+      leaflet_base %>%
+        addCircleMarkers(data = data$postos,
+                         radius = ~ rescale(data$postos$doses_n, c(4,10)),
+                         # color = ~pal(doses_n),
+                         stroke = FALSE, fillOpacity = 0.5,
+                         fillColor = 'black',
+                         label = labels_html)
+      # addLegend("bottomleft", pal = pal, values = ~data$postos$doses_n,
+      #           title = "Quantidade de doses aplicadas",
+      #           # labFormat = labelFormat(prefix = "$"),
+      #           opacity = 1)
+    }
     
   })
   
@@ -254,7 +335,7 @@ server <- function(input, output, session) {
   
   output$total_doses <- renderInfoBox({
     infoBox(
-      title = "Doses aplicadas", 
+      title = "Doses", 
       fill = FALSE,
       value =  sprintf("%s doses", scales::comma(sum(data$dia$n), accuracy = 1, scale = 1, big.mark = "\\.")),
       # value =  HTML(route_df()$od),
@@ -265,7 +346,7 @@ server <- function(input, output, session) {
   
   output$total_vacinados <- renderInfoBox({
     infoBox(
-      title = "Pessoas vacinadas", 
+      title = "Pessoas", 
       fill = FALSE,
       value =  sprintf("%s pessoas", scales::comma(data$totais$n, accuracy = 1, scale = 1, big.mark = "\\.")),
       # value =  HTML(route_df()$od),
