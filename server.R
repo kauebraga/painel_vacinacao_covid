@@ -66,8 +66,6 @@ server <- function(input, output, session) {
       data$dia <- vacina_dia_pais
       data$totais <- totais_pais
       data$mapa <- pais
-      data$postos <- postos_n_coords %>% filter(estabelecimento_codigo_ibge_municipio == '5300108') %>%
-        slice(1)
       
     }
     
@@ -89,7 +87,6 @@ server <- function(input, output, session) {
     
     # print(sprintf("Estado: %s", input$estado))
     # print(sprintf("Cidade: %s", input$cidade))
-    
   })
   
   
@@ -128,10 +125,12 @@ server <- function(input, output, session) {
     print(head(data$dia))
     # print(input$cidade)
     
-    data$dia[, data_aplicacao := datetime_to_timestamp(data_aplicacao)]
+    print(class(data$dia$data_aplicacao))
+    
+    # data$dia[, data_aplicacao := datetime_to_timestamp(data_aplicacao)]
     
     highchart() %>%
-      hc_xAxis(categories = data$dia$data_aplicacao,
+      hc_xAxis(categories = datetime_to_timestamp(data$dia$data_aplicacao),
                type = 'datetime',
                # ticks every month
                # tickInterval =  1000 * 3600 * 24 * 50,
@@ -270,7 +269,7 @@ server <- function(input, output, session) {
     # print(centroid_go()$lat)
     
     # print(input$cidade)
-    print(input$estado)
+    # print(input$estado)
     
     # if(input$estado != "") {
     
