@@ -6,7 +6,7 @@ library(ggplot2)
 library(highcharter)
 # library(shinyjs)
 library(lubridate)
-library(readr)
+# library(readr)
 
 library(shiny)
 library(shinydashboard)

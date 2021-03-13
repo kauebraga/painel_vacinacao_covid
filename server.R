@@ -4,8 +4,8 @@ library(shinyWidgets)
 library(shinyBS)
 library(highcharter)
 # library(shinyjs)
-library(lubridate)
-library(readr)
+# library(lubridate)
+# library(readr)
 library(sf)
 library(leaflet)
 library(scales)
@@ -25,25 +25,25 @@ options(highcharter.lang = lang)
 # geo data
 
 
-pais <- readr::read_rds("data/pais_sf.rds")
-munis <- readr::read_rds("data/munis_sf.rds")
-estados <- readr::read_rds("data/estados_sf.rds")
+pais <- readRDS("data/pais_sf.rds")
+munis <- readRDS("data/munis_sf.rds")
+estados <- readRDS("data/estados_sf.rds")
 
 # abrir dados de vacinacao ----------
-vacina_grupo_pais <- read_rds("data/vacina_por_grupo_pais.rds")
-vacina_grupo_estados <- read_rds("data/vacina_por_grupo_estados.rds")
-vacina_grupo_munis <- read_rds("data/vacina_por_grupo_munis.rds")
+vacina_grupo_pais <- readRDS("data/vacina_por_grupo_pais.rds")
+vacina_grupo_estados <- readRDS("data/vacina_por_grupo_estados.rds")
+vacina_grupo_munis <- readRDS("data/vacina_por_grupo_munis.rds")
 
-vacina_dia_pais <- read_rds("data/vacina_dia_pais.rds")
-vacina_dia_estados <- read_rds("data/vacina_dia_estados.rds")
-vacina_dia_munis <- read_rds("data/vacina_dia_munis.rds")
+vacina_dia_pais <- readRDS("data/vacina_dia_pais.rds")
+vacina_dia_estados <- readRDS("data/vacina_dia_estados.rds")
+vacina_dia_munis <- readRDS("data/vacina_dia_munis.rds")
 
 
-totais_pais <- read_rds("data/totais_pais.rds")
-totais_estados <- read_rds("data/totais_estados.rds")
-totais_munis <- read_rds("data/totais_munis.rds")
+totais_pais <- readRDS("data/totais_pais.rds")
+totais_estados <- readRDS("data/totais_estados.rds")
+totais_munis <- readRDS("data/totais_munis.rds")
 
-postos_n_coords <- read_rds("data/postos_n_coords.rds")
+postos_n_coords <- readRDS("data/postos_n_coords.rds")
 
 
 
