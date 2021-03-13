@@ -95,7 +95,6 @@ body <- dashboardBody(
   )
 ),
 
-shinyjs::useShinyjs(),
 tags$head(
   tags$link(rel = "stylesheet", type = "text/css", href = "styles.css")
 ),
