@@ -4,7 +4,7 @@ library(shinyWidgets)
 library(shinyBS)
 library(ggplot2)
 library(highcharter)
-library(shinyjs)
+# library(shinyjs)
 library(lubridate)
 library(readr)
 
