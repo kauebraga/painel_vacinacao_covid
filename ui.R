@@ -21,7 +21,7 @@ header <- dashboardHeader(
   disable = FALSE,
   tags$li(class="dropdown", a("Dados de vacinação: ", href="https://brasil.io/", "brasil.io", target="_blank")),
   # tags$li(class="dropdown", uiOutput("dica")),
-  tags$li(class="dropdown", tags$a(href="https://data.brasil.io/dataset/covid19/microdados_vacinacao.csv.gz", sprintf("Última atualização: %s", "12/03/2021"), target="_blank")),
+  tags$li(class="dropdown", tags$a(href="https://data.brasil.io/dataset/covid19/microdados_vacinacao.csv.gz", sprintf("Última atualização: %s", "15/03/2021"), target="_blank")),
   # tags$li(class="dropdown", tags$a(href="https://opendatasus.saude.gov.br/dataset/covid-19-vacinacao", "Última atualização: 12/03/2021", target="_blank")),
   tags$li(class="dropdown", tags$a(href="https://kauebraga.dev/", "Contato", target="_blank")),
   # tags$li(class="dropdown",tags$a(href="https://www.linkedin.com/in/abhinav-agrawal-pmp%C2%AE-itil%C2%AE-5720309/" ,icon("linkedin"), "My Profile", target="_blank")),
