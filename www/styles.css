@@ -36,6 +36,28 @@ h1, h2, .h3 {
     background-color: transparent;
 }
 
+@media (max-width: 767px) {
+.skin-black .main-header>.logo {
+    background-color: #F4F4F4;
+    color: #000;
+    border-bottom: 0 solid transparent;
+    border-right: none;
+}
+}
+
+@media (max-width: 767px) {
+.skin-black .main-header>.logo:hover {
+    background-color: #F4F4F4;
+}
+}
+
+@media (max-width: 767px) {
+.content-wrapper, .main-footer, .right-side {
+    margin-left: 0;
+    padding-top: 50px;
+}
+}
+
 
 /* INFO BOX */
 .info-box {
@@ -129,3 +151,4 @@ h1, h2, .h3 {
       top: 7px;
     right: 5px;
 }
+
