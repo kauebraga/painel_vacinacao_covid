@@ -152,6 +152,9 @@ server <- function(input, output, session) {
                tickLength = 0,
                gridLineWidth = 0) %>%
       hc_chart(style = list(fontFamily = "Roboto Condensed")) %>%
+      hc_title(
+        text = "Vacinação por dia"
+      ) %>%
       hc_plotOptions(column = list(borderRadius = 1,
                                    borderColor = "#000000",
                                    color = "#F4F4F4",
@@ -192,6 +195,10 @@ server <- function(input, output, session) {
                title = list(text = ""),
                tickLength = 0,
                gridLineWidth = 0) %>%
+      hc_title(
+        text = "Vacinação por grupo"
+      ) %>%
+      hc_chart(style = list(fontFamily = "Roboto Condensed")) %>%
       hc_plotOptions(bar = list(borderRadius = 1,
                                 borderColor = "#000000",
                                 color = "#F4F4F4",
