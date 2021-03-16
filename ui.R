@@ -30,72 +30,72 @@ header <- dashboardHeader(
 
 body <- dashboardBody(
   fluidRow(
+    column(width = 5,
+           box(width = NULL, 
+               status = "primary",
+               collapsible = FALSE,
+               pickerInput(inputId = "estado", 
+                           label = "Estado: ", 
+                           options = list(title = "Selecione o estado"),
+                           choices = list(
+                             'Norte' = c('Rondônia' =	"RO",
+                                         'Acre' =	"AC",
+                                         'Amazonas' =	"AM",
+                                         'Roraima' =	"RR",
+                                         'Pará' =	"PA",
+                                         'Amapá' =	"AP",
+                                         'Tocantins' =	"TO"
+                             ),
+                             'Nordeste' = c('Maranhão' =	"MA",
+                                            'Piauí' =	"PI",
+                                            'Ceará' =	"CE",
+                                            'Rio Grande do Norte' =	"RN",
+                                            'Paraíba' =	"PB",
+                                            'Pernambuco' =	"PE",
+                                            'Alagoas' =	"AL",
+                                            'Sergipe' =	"SE",
+                                            'Bahia' =	"BA"),
+                             'Sudeste' = c('Minas Gerais' =	"MG",
+                                           'Espírito Santo' =	"ES",
+                                           'Rio de Janeiro' =	"RJ",
+                                           'São Paulo' =	"SP"),
+                             'Sul' = c('Paraná' =	"PR",
+                                       'Santa Catarina' =	"SC",
+                                       'Rio Grande do Sul' =	"RS"),
+                             'Centro-Oeste' = c('Mato Grosso do Sul' = "MS",
+                                                'Mato Grosso' =	"MT",
+                                                'Goiás'=	"GO",
+                                                'Distrito Federal' =	"DF")
+                           )),
+               uiOutput("escolher_cidade")
+               # conditionalPanel(condition = "input.map_arc_click, input.Clicked",
+               
+               
+           ),
+           box(width = NULL,
+               status = "primary",
+               solidHeader = FALSE,
+               collapsible = FALSE,
+               # title = "Por grupo",
+               infoBoxOutput("total_doses", width = 6),
+               infoBoxOutput("total_vacinados", width = 6),
+               highchartOutput("graph_grupo"))
+    ),
     column(width = 7,
            box(width = NULL,
                # height = "100%",
                solidHeader = TRUE,
                # title = "Mapa",
-               leafletOutput("map", height = "calc(100vh - 400px)")
+               leafletOutput("map", height = "calc(100vh - 450px)")
                # mapdeckOutput("map", height = "calc(100vh - 400px)")
            ),
            box(width = NULL,
                # height = "100%",
                solidHeader = TRUE,
-               # title = "Mapa",
-               highchartOutput("graph_dia", height = "300px"))
+               # title = "Por dia",
+               highchartOutput("graph_dia", height = "250px"))
     ),
     
-  column(width = 5,
-         box(width = NULL, 
-             status = "primary",
-             collapsible = FALSE,
-             pickerInput(inputId = "estado", 
-                         label = "Estado: ", 
-                         options = list(title = "Selecione o estado"),
-                         choices = list(
-                           'Norte' = c('Rondônia' =	"RO",
-                                       'Acre' =	"AC",
-                                       'Amazonas' =	"AM",
-                                       'Roraima' =	"RR",
-                                       'Pará' =	"PA",
-                                       'Amapá' =	"AP",
-                                       'Tocantins' =	"TO"
-                           ),
-                           'Nordeste' = c('Maranhão' =	"MA",
-                                          'Piauí' =	"PI",
-                                          'Ceará' =	"CE",
-                                          'Rio Grande do Norte' =	"RN",
-                                          'Paraíba' =	"PB",
-                                          'Pernambuco' =	"PE",
-                                          'Alagoas' =	"AL",
-                                          'Sergipe' =	"SE",
-                                          'Bahia' =	"BA"),
-                           'Sudeste' = c('Minas Gerais' =	"MG",
-                                         'Espírito Santo' =	"ES",
-                                         'Rio de Janeiro' =	"RJ",
-                                         'São Paulo' =	"SP"),
-                           'Sul' = c('Paraná' =	"PR",
-                                     'Santa Catarina' =	"SC",
-                                     'Rio Grande do Sul' =	"RS"),
-                           'Centro-Oeste' = c('Mato Grosso do Sul' = "MS",
-                                              'Mato Grosso' =	"MT",
-                                              'Goiás'=	"GO",
-                                              'Distrito Federal' =	"DF")
-                         )),
-             uiOutput("escolher_cidade")
-             # conditionalPanel(condition = "input.map_arc_click, input.Clicked",
-             
-             
-         ),
-         box(width = NULL,
-             status = "primary",
-             solidHeader = FALSE,
-             collapsible = FALSE,
-             title = "Por grupo",
-             infoBoxOutput("total_doses", width = 6),
-             infoBoxOutput("total_vacinados", width = 6),
-             highchartOutput("graph_grupo"))
-  )
 ),
 
 tags$head(
