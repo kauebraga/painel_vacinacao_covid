@@ -12,7 +12,7 @@ library(shiny)
 library(shinydashboard)
 library(leaflet)
 
-atualizacao <- read_rds("data/data_atualizacao.rds") %>% as.Date()
+atualizacao <- readRDS("data/data_atualizacao.rds") %>% as.Date()
 atualizacao <- format(atualizacao, "%d/%m/%y")
 
 header <- dashboardHeader(
