@@ -62,7 +62,7 @@ server <- function(input, output, session) {
     # se o estado for vazio, escolher os dados do brasil
     if(input$estado == "") {
       
-      data$grupo <- vacina_grupo_pais
+      data$grupo <- vacina_grupo_pais %>% arrange(desc(n))
       data$dia <- vacina_dia_pais
       data$totais <- totais_pais
       data$mapa <- pais
@@ -75,10 +75,10 @@ server <- function(input, output, session) {
       # # quando escolher estado, zerar o municipio
       # input$cidade <- NULL
       
-      data$grupo <- vacina_grupo_estados[estabelecimento_unidade_federativa == input$estado]
+      data$grupo <- vacina_grupo_estados[estabelecimento_unidade_federativa == input$estado] %>% arrange(desc(n))
       data$dia <- vacina_dia_estados[estabelecimento_unidade_federativa == input$estado]
       data$totais <- totais_estados[estabelecimento_unidade_federativa == input$estado]
-      data$mapa <- estados %>% filter(abbrev_state == input$estado)
+      data$mapa <- estados %>% filter(abbrev_state == input$estado) %>% mutate(a = name_state)
       data$postos <- postos_n_coords %>% filter(estabelecimento_unidade_federativa == input$estado)
       
       
@@ -95,10 +95,10 @@ server <- function(input, output, session) {
     
     if(input$cidade != "") {
       
-      data$grupo <- vacina_grupo_munis[uf == input$estado & estabelecimento_codigo_ibge_municipio == input$cidade]
+      data$grupo <- vacina_grupo_munis[uf == input$estado & estabelecimento_codigo_ibge_municipio == input$cidade] %>% arrange(desc(n))
       data$dia <- vacina_dia_munis[uf == input$estado & estabelecimento_codigo_ibge_municipio == input$cidade]
       data$totais <- totais_munis[uf == input$estado & estabelecimento_codigo_ibge_municipio == input$cidade]
-      data$mapa <- munis %>% filter(abbrev_state == input$estado & code_muni == input$cidade)
+      data$mapa <- munis %>% filter(abbrev_state == input$estado & code_muni == input$cidade) %>% mutate(a = name_muni)
       data$postos <- postos_n_coords %>% filter(estabelecimento_codigo_ibge_municipio == input$cidade)
       
       # print(v_estado$estado)
@@ -331,6 +331,8 @@ server <- function(input, output, session) {
       #           opacity = 1)
     }
     
+    print(data$mapa$a)
+    
   })
   
   
@@ -357,6 +359,17 @@ server <- function(input, output, session) {
       value =  sprintf("%s pessoas", scales::comma(data$totais$n, accuracy = 1, scale = 1, big.mark = "\\.")),
       # value =  HTML(route_df()$od),
       icon = icon("user-friends"),
+      color = "black"
+    )
+  })
+  
+  output$quanto_falta <- renderInfoBox({
+    infoBox(
+      title = ifelse(input$estado == "", "Quanto tempo falta?", sprintf("Quanto tempo falta? Local: %s", data$mapa$a)),
+      fill = FALSE,
+      value =  HTML(sprintf('No atual ritmo de vacinação, demoraria <span style="color: #FF5935">%i meses</span> para vacinar 70%% da população com uma vacina de duas doses', 
+                            round(data$totais$dias_faltantes/30))),
+      icon = icon("clock"),
       color = "black"
     )
   })
