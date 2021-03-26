@@ -82,7 +82,7 @@ readr::write_rds(totais_munis, "data/totais_munis.rds")
 # 4) totais by age group ---------------------------
 
 # reclassificar grupo nao classificado
-table(dados$paciente_grupo, useNA = 'always')
+# table(dados$paciente_grupo, useNA = 'always')
 dados[, paciente_grupo := fifelse(paciente_grupo == "", "Sem classificação", paciente_grupo)]
 
 
@@ -330,14 +330,18 @@ estimativas_pop <- read_rds("../../data/painel_vacinacao_covid/estimativas_pop_i
 
 # juntar com a base do brasil
 vacina_dia_munis <- vacina_dia_munis %>%
+  mutate(id = as.character(id)) %>%
   left_join(estimativas_pop, by = "id") %>%
   mutate(dias_faltantes = as.integer((doses_necessarias - total)/ritmo))
   
 
 # trazer essa coluna para os totais
-totais_pais <-    read_rds("data/totais_pais.rds") %>% left_join(vacina_dia_pais)
-totais_estados <- read_rds("data/totais_estados.rds") %>% left_join(vacina_dia_estados)
-totais_munis <-   read_rds("data/totais_munis.rds") %>% left_join(vacina_dia_munis)
+totais_pais <-    read_rds("data/totais_pais.rds")    %>% mutate(id = as.character(id)) %>%
+  left_join(vacina_dia_pais)
+totais_estados <- read_rds("data/totais_estados.rds") %>% mutate(id = as.character(id)) %>%
+  left_join(vacina_dia_estados)
+totais_munis <-   read_rds("data/totais_munis.rds")   %>% mutate(id = as.character(id)) %>%
+  left_join(vacina_dia_munis)
 
 # join
 

@@ -5,16 +5,29 @@ library(Hmisc)
 library(readr)
 
 # openvacinacao
-data_vacinacao <- fread("../data/painel_vacinacao_covid/microdados_vacinacao.csv",
+data_vacinacao <- fread("../../data/painel_vacinacao_covid/microdados_vacinacao.csv",
                         select = c("estabelecimento_codigo_cnes", "estabelecimento_municipio",
                                    "estabelecimento_unidade_federativa", 
                                    "estabelecimento_razao_social",
-                                   "estabelecimento"))
+                                   "estabelecimento"),
+                        colClasses = 'character')
 
 # abrir dados do cnes com o endereco dos locais
 # baixar daqui: http://cnes.datasus.gov.br/pages/downloads/arquivosBaseDados.jsp
-data_cnes <- fread("../data-raw/painel_vacinacao_covid/tbEstabelecimento202101.csv", colClasses = 'character',
-                   select = c("CO_CNES", "NO_LOGRADOURO", "NU_ENDERECO", "NO_BAIRRO",  "CO_CEP"))
+data_cnes <- fread("../../data-raw/painel_vacinacao_covid/tbEstabelecimento202101.csv", colClasses = 'character')
+# select = c("CO_CNES", "NO_LOGRADOURO", "NU_ENDERECO", "NO_BAIRRO",  "CO_CEP"))
+
+
+data_vacinacao_teste <- left_join(
+  distinct(data_vacinacao, estabelecimento_codigo_cnes, .keep_all = TRUE),
+  select(data_cnes, estabelecimento_codigo_cnes = CO_CNES, 
+         lon = NU_LONGITUDE, lat = NU_LATITUDE)
+)
+
+filter(data_vacinacao_teste, is.na(lat)) %>% nrow()
+
+count(data_vacinacao_teste, lon) %>% filter(n >= 2)
+
 
 
 # testes
