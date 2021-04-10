@@ -15,9 +15,10 @@ sfc_as_cols <- function(x, names = c("lon","lat")) {
 }
 
 # 0) baixar dados ------------------------------
-curl::curl_download("https://data.brasil.io/dataset/covid19/microdados_vacinacao.csv.gz",
-                    destfile = "../../data-raw/painel_vacinacao_covid/microdados_vacinacao.csv.gz",
-                    quiet = FALSE)
+file.remove("../../data-raw/painel_vacinacao_covid/microdados_vacinacao.csv.gz")
+download.file("https://data.brasil.io/dataset/covid19/microdados_vacinacao.csv.gz",
+              destfile = "../../data-raw/painel_vacinacao_covid/microdados_vacinacao.csv.gz",
+              method = "libcurl")
 # system("cd data-raw && wget https://data.brasil.io/dataset/covid19/microdados_vacinacao.csv.gz")
 # "https://s3-sa-east-1.amazonaws.com/ckan.saude.gov.br/PNI/vacina/2021/part-00000-e00e85d2-6871-4170-a5d7-74e1d84cfada-c000.csv"
 
@@ -26,6 +27,7 @@ curl::curl_download("https://data.brasil.io/dataset/covid19/microdados_vacinacao
 
 # 1) abrir dados e salvar como data.table descompacatado --------------------------------------------------
 
+setDTthreads(10)
 dados <- fread("../../data-raw/painel_vacinacao_covid/microdados_vacinacao.csv.gz")
 dados[, estabelecimento_codigo_cnes := stringr::str_pad(estabelecimento_codigo_cnes, width = 7, pad = 0)]
 
@@ -134,7 +136,7 @@ dados <- dados[data_aplicacao >= as.Date("2021-01-17")]
 dados <- setorder(dados, data_aplicacao)
 
 vacina_dia_pais <- dados[, .(n = .N), 
-                                   by = .(data_aplicacao) ]
+                         by = .(data_aplicacao) ]
 vacina_dia_pais[, id := ""]
 
 # calculate rolling seven day average
@@ -142,7 +144,7 @@ vacina_dia_pais[, n_7mean := frollmean(n, 7)]
 vacina_dia_pais[, n_7mean := round(n_7mean, 0)]
 
 vacina_dia_estados <- dados[, .(n = .N), 
-                                   by = .(estabelecimento_unidade_federativa, data_aplicacao) ]
+                            by = .(estabelecimento_unidade_federativa, data_aplicacao) ]
 vacina_dia_estados[, id := estabelecimento_unidade_federativa]
 
 # vacina_dia_estados <- dados %>%
@@ -161,7 +163,7 @@ vacina_dia_estados[, n_7mean := round(n_7mean, 0)]
 
 
 vacina_dia_munis <- dados[, .(n = .N, uf = estabelecimento_unidade_federativa[1]), 
-                                         by = .(estabelecimento_codigo_ibge_municipio, data_aplicacao) ]
+                          by = .(estabelecimento_codigo_ibge_municipio, data_aplicacao) ]
 vacina_dia_munis[, id := estabelecimento_codigo_ibge_municipio]
 
 # vacina_dia_munis <- dados %>%
@@ -322,7 +324,7 @@ vacina_dia_munis <- vacina_dia_munis %>%
   mutate(id = as.character(id)) %>%
   left_join(estimativas_pop, by = "id") %>%
   mutate(dias_faltantes = as.integer((doses_necessarias - total)/ritmo))
-  
+
 
 # trazer essa coluna para os totais
 totais_pais <-    read_rds("data/totais_pais.rds")    %>% mutate(id = as.character(id)) %>%
