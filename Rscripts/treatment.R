@@ -28,11 +28,17 @@ download.file("https://data.brasil.io/dataset/covid19/microdados_vacinacao.csv.g
 # 1) abrir dados e salvar como data.table descompacatado --------------------------------------------------
 
 setDTthreads(10)
-dados <- fread("../../data-raw/painel_vacinacao_covid/microdados_vacinacao.csv.gz")
+dados <- fread("../../data-raw/painel_vacinacao_covid/microdados_vacinacao.csv.gz", 
+               colClasses = "character")
 dados[, estabelecimento_codigo_cnes := stringr::str_pad(estabelecimento_codigo_cnes, width = 7, pad = 0)]
 
 # extrair data de atualizacao
 data_atualizacao <- max(na.omit(dados$data_aplicacao)) %>% write_rds("data/data_atualizacao.rds")
+
+# drop columns (too heavy)
+dados$documento_uuid <- NULL
+dados$paciente_uuid <- NULL
+dados$paciente_subgrupo <- NULL
 
 fwrite(dados, "../../data/painel_vacinacao_covid/microdados_vacinacao.csv")
 # colnames(dados)
