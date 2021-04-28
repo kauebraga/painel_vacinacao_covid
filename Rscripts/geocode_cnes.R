@@ -33,6 +33,7 @@ count(data_vacinacao_teste, lon) %>% filter(n >= 2)
 # testes
 # fortaleza
 a <- data_vacinacao %>% filter(estabelecimento_municipio == "Fortaleza") %>% distinct(estabelecimento_codigo_cnes, .keep_all = TRUE)
+a <- data_vacinacao %>% filter(estabelecimento_municipio == "Rio de Janeiro")
 b <- data_cnes[CO_CNES == "9094857"]
 # poucos digitos
 a <- data_vacinacao[, nchar_cnes := nchar(estabelecimento_codigo_cnes)]
